@@ -3,6 +3,7 @@ package orsc.multiclient;
 import com.openrsc.client.model.Sprite;
 import java.io.ByteArrayInputStream;
 import orsc.BrowserRuntime;
+import orsc.graphics.two.Fonts;
 import orsc.mudclient;
 import org.teavm.jso.JSBody;
 import org.teavm.jso.canvas.CanvasRenderingContext2D;
@@ -14,6 +15,7 @@ import org.teavm.jso.dom.events.MouseEvent;
 import org.teavm.jso.dom.html.HTMLCanvasElement;
 import org.teavm.jso.dom.html.HTMLDocument;
 import org.teavm.jso.typedarrays.Uint8ClampedArray;
+import orsc.osConfig;
 
 /**
  * Browser (TeaVM) platform boundary for the OpenRSC custom client. The client renders into
@@ -156,9 +158,9 @@ public class BrowserClientPort implements ClientPort {
       e.preventDefault();
       int rotation = wheelDeltaY(e) > 0 ? 1 : -1;
       if (client.showUiTab == 0) {
-        int newZoom = orsc.osConfig.C_LAST_ZOOM + rotation * 10;
+        int newZoom = osConfig.C_LAST_ZOOM + rotation * 10;
         if (newZoom >= 0 && newZoom <= 255) {
-          orsc.osConfig.C_LAST_ZOOM = newZoom;
+          osConfig.C_LAST_ZOOM = newZoom;
         }
       } else {
         client.runScroll(rotation);
@@ -185,7 +187,7 @@ public class BrowserClientPort implements ClientPort {
       if (code == 13 || code == 10) client.enterPressed = true;
 
       // Text fields: login/dialog input + chat. Only accept renderable characters.
-      if (ch > 0 && orsc.graphics.two.Fonts.inputFilterChars.indexOf(ch) >= 0) {
+      if (ch > 0 && Fonts.inputFilterChars.indexOf(ch) >= 0) {
         if (client.inputTextCurrent.length() < 20) {
           client.inputTextCurrent = client.inputTextCurrent + (char) ch;
         }

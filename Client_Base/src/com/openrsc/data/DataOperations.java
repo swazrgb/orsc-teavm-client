@@ -2,6 +2,7 @@ package com.openrsc.data;
 
 import java.io.*;
 import java.util.Arrays;
+import orsc.net.BrowserCache;
 
 public class DataOperations {
 	private static final char[] special_characters = "~`!@#$%^&*()_-+={}[]|'\";:?><,./".toCharArray();
@@ -16,7 +17,7 @@ public class DataOperations {
 
 	public static InputStream streamFromPath(String path) throws IOException {
 		// Browser build: the cache location is an HTTP base (the baked cache/ tree), fetched over XHR.
-		return new ByteArrayInputStream(orsc.net.BrowserCache.fetch(path));
+		return new ByteArrayInputStream(BrowserCache.fetch(path));
 	}
 
 	public static void readFromPath(String path, byte abyte0[], int length) throws IOException {

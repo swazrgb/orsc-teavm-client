@@ -4,6 +4,7 @@ import com.openrsc.client.entityhandling.EntityHandler;
 import com.openrsc.client.model.Sector;
 import com.openrsc.data.DataConversions;
 import orsc.Config;
+import orsc.graphics.two.BrowserZipFile;
 import orsc.graphics.two.GraphicsController;
 import orsc.util.FastMath;
 import orsc.util.GenUtil;
@@ -48,7 +49,7 @@ public final class World {
 	private Sector[] worldMapSector = new Sector[4];
 	private int mapPointX = 0;
 	private int mapPointZ = 0;
-	private orsc.graphics.two.BrowserZipFile tileArchive;
+	private BrowserZipFile tileArchive;
 	private Sector[] sectors;
 	public String mapHash;
 
@@ -81,7 +82,7 @@ public final class World {
 					path = Config.F_CACHE_DIR + File.separator + "video" + File.separator + "Custom_Landscape.orsc";
 				else
 					path = Config.F_CACHE_DIR + File.separator + "video" + File.separator + "Authentic_Landscape.orsc";
-				tileArchive = new orsc.graphics.two.BrowserZipFile(path);
+				tileArchive = new BrowserZipFile(path);
 				mapHash = generateMapHash(path);
 			} catch (Exception e) {
 				e.printStackTrace();

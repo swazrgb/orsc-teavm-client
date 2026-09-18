@@ -18,6 +18,7 @@ import com.openrsc.interfaces.NCustomComponent;
 import com.openrsc.interfaces.misc.*;
 import com.openrsc.interfaces.misc.clan.Clan;
 import com.openrsc.interfaces.misc.party.Party;
+import java.text.SimpleDateFormat;
 import orsc.buffers.RSBuffer;
 import orsc.buffers.RSBufferUtils;
 import orsc.buffers.RSBuffer_Bits;
@@ -27,6 +28,7 @@ import orsc.graphics.three.CollisionFlag;
 import orsc.graphics.three.RSModel;
 import orsc.graphics.three.Scene;
 import orsc.graphics.three.World;
+import orsc.graphics.two.BrowserZipFile;
 import orsc.graphics.two.Fonts;
 import orsc.graphics.two.MudClientGraphics;
 import orsc.graphics.two.SpriteArchive.Subspace;
@@ -783,8 +785,8 @@ public final class mudclient implements Runnable {
 		String stricterFilterString = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,4}";
 		String laxString = ".+@.+\\.[A-Za-z]{2}[A-Za-z]*";
 		String emailRegex = stricterFilter ? stricterFilterString : laxString;
-		java.util.regex.Pattern p = java.util.regex.Pattern.compile(emailRegex);
-		java.util.regex.Matcher m = p.matcher(email);
+		Pattern p = Pattern.compile(emailRegex);
+		Matcher m = p.matcher(email);
 		return m.matches();
 	}
 
@@ -883,7 +885,7 @@ public final class mudclient implements Runnable {
 		// and returns the decompressed body as its sole entry; take it.
 		clientPort.showLoadingProgress(startPercentage, "Loading " + fileTitle);
 		try {
-			return new orsc.graphics.two.BrowserZipFile(filename).soleEntry();
+			return new BrowserZipFile(filename).soleEntry();
 		} catch (IOException _ex) {
 			_ex.printStackTrace();
 			return null;
@@ -14255,7 +14257,7 @@ public final class mudclient implements Runnable {
 			PrintWriter printWriter;
 			if (!uID.exists()) {
 				printWriter = new PrintWriter(new FileOutputStream(uID), true);
-				long uuID = new java.util.Random().nextLong();
+				long uuID = new Random().nextLong();
 				printWriter.println(uuID);
 				printWriter.flush();
 				uID.setReadOnly();
@@ -15669,8 +15671,8 @@ public final class mudclient implements Runnable {
 		final String ANSI_CYAN = "\u001B[36m";
 		final String ANSI_WHITE = "\u001B[37m";
 
-		final java.text.SimpleDateFormat dateTimeFormatter = new java.text.SimpleDateFormat("HH:mm:ss");
-		final java.util.Date now = new java.util.Date();
+		final SimpleDateFormat dateTimeFormatter = new SimpleDateFormat("HH:mm:ss");
+		final Date now = new Date();
 		final String currentTime = dateTimeFormatter.format(now);
 
 		// Strip all the freaking color codes

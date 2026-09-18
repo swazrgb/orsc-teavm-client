@@ -2,8 +2,10 @@ package orsc;
 
 import com.openrsc.client.entityhandling.EntityHandler;
 import com.openrsc.client.entityhandling.defs.ItemDef;
+import com.openrsc.client.entityhandling.defs.NPCDef;
 import com.openrsc.client.entityhandling.instances.Item;
 import com.openrsc.client.model.Sprite;
+import org.teavm.jso.JSBody;
 import orsc.buffers.RSBufferUtils;
 import orsc.buffers.RSBuffer_Bits;
 import orsc.enumerations.MessageType;
@@ -522,7 +524,7 @@ public class PacketHandler {
 
 	/** Forward the injected live-tick JSON (opcode 251) to the popup wrapper hosting this client iframe.
 	 *  Same-origin, so we scope the message to our own origin rather than a wildcard target. */
-	@org.teavm.jso.JSBody(params = {"json"}, script =
+	@JSBody(params = {"json"}, script =
 		"try { if (window.parent && window.parent !== window) window.parent.postMessage({rscLiveTick: json}, window.location.origin); } catch (e) {}")
 	private static native void postLiveTick(String json);
 
@@ -569,10 +571,10 @@ public class PacketHandler {
 		int walkModel = packetsIncoming.getByte() & 0xff;
 		int combatModel = packetsIncoming.getByte() & 0xff;
 		int combatSprite = packetsIncoming.getByte() & 0xff;
-		com.openrsc.client.entityhandling.defs.NPCDef newNpc = new com.openrsc.client.entityhandling.defs.NPCDef(name, description, optionCommand, attack, strength, hits, defense,
+		NPCDef newNpc = new NPCDef(name, description, optionCommand, attack, strength, hits, defense,
 			attackable, sprites, hairColour, topColour, bottomColour, skinColour, camera1, camera2,
 			walkModel, combatModel, combatSprite, id);
-		com.openrsc.client.entityhandling.EntityHandler.npcs.set(id, newNpc);
+		EntityHandler.npcs.set(id, newNpc);
 	}
 
 	private void updateBatchProgression() {
@@ -1492,17 +1494,17 @@ public class PacketHandler {
 				if (id != 60000) {
 					int xSize, zSize;
 					if (dir == 0 || dir == 4) {
-						zSize = com.openrsc.client.entityhandling.EntityHandler.getObjectDef(id).getHeight();
-						xSize = com.openrsc.client.entityhandling.EntityHandler.getObjectDef(id).getWidth();
+						zSize = EntityHandler.getObjectDef(id).getHeight();
+						xSize = EntityHandler.getObjectDef(id).getWidth();
 					} else {
-						xSize = com.openrsc.client.entityhandling.EntityHandler.getObjectDef(id).getHeight();
-						zSize = com.openrsc.client.entityhandling.EntityHandler.getObjectDef(id).getWidth();
+						xSize = EntityHandler.getObjectDef(id).getHeight();
+						zSize = EntityHandler.getObjectDef(id).getWidth();
 					}
 
 					int tileSize = mc.getTileSize();
 					int xWorld = (xTile * 2 + xSize) * tileSize / 2;
 					int zWorld = (zTile * 2 + zSize) * tileSize / 2;
-					int modelIndex = com.openrsc.client.entityhandling.EntityHandler.getObjectDef(id).modelID;// CacheValues.gameObjectModelIndex[id];
+					int modelIndex = EntityHandler.getObjectDef(id).modelID;// CacheValues.gameObjectModelIndex[id];
 					RSModel m = mc.getModelCacheItem(modelIndex).clone();
 					mc.getScene().addModel(m);
 					m.key = mc.getGameObjectInstanceCount();
@@ -1643,7 +1645,7 @@ public class PacketHandler {
 		int itemID = packetsIncoming.getShort();
 		boolean noted = packetsIncoming.getUnsignedByte() == 1;
 		int stackSize = 1;
-		if (com.openrsc.client.entityhandling.EntityHandler.getItemDef(itemID & 32767).isStackable() || noted) {
+		if (EntityHandler.getItemDef(itemID & 32767).isStackable() || noted) {
 			stackSize = packetsIncoming.get32();
 		}
 		mc.setInventoryItemID(slot, FastMath.bitwiseAnd(itemID, 32767));
@@ -1675,7 +1677,7 @@ public class PacketHandler {
 			boolean noted = packetsIncoming.getByte() == 1;
 
 			mc.getInventoryItem(i).setNoted(noted);
-			if (com.openrsc.client.entityhandling.EntityHandler.getItemDef(itemID, noted).isStackable()) {
+			if (EntityHandler.getItemDef(itemID, noted).isStackable()) {
 				mc.setInventoryItemSize(i, packetsIncoming.get32());
 			} else {
 				mc.setInventoryItemSize(i, 1);
@@ -1911,7 +1913,7 @@ public class PacketHandler {
 					npc.message = message;
 					if (mc.getLocalPlayer().serverIndex == chatRecipient) {
 						mc.showMessage(false, null,
-							com.openrsc.client.entityhandling.EntityHandler.getNpcDef(npc.npcId).getName() + ": " + npc.message,
+							EntityHandler.getNpcDef(npc.npcId).getName() + ": " + npc.message,
 							MessageType.QUEST, 0, null, "@yel@");
 
 						// Discord update
@@ -2865,7 +2867,7 @@ public class PacketHandler {
 							&& mc.getGameObjectInstanceZ(var7) == groundItemY) {
 							// Ground item is on a game object
 							mc.setGroundItemHeight(mc.getGroundItemCount(),
-								com.openrsc.client.entityhandling.EntityHandler.getObjectDef(
+								EntityHandler.getObjectDef(
 									mc.getGameObjectInstanceID(var7)).getGroundItemVar());
 							break;
 						}
