@@ -24,6 +24,10 @@
     <java.version>11</java.version>
     <teavm.version>0.15.0</teavm.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <!-- Reproducible builds: the war's entries carry this instant instead of the build's time, so two
+         builds of one commit are byte-identical. A constant, not the commit's time: a build cache
+         that hashes the effective pom would otherwise miss on every commit. -->
+    <project.build.outputTimestamp>2026-01-01T00:00:00Z</project.build.outputTimestamp>
     <!-- Fast client build: minified + FULL optimization (this is what cut the JS compile/eval cost).
          Source maps stay ON — they map the minified output back to Java sources for debugging and cost
          nothing at runtime (the .map is fetched only when devtools is open). For an unminified build:
@@ -57,6 +61,25 @@
          (TeaVM_Client/src) is added below, so both compile into one graph TeaVM transpiles. -->
     <sourceDirectory>Client_Base/src</sourceDirectory>
     <plugins>
+      <!-- Keeps the build reproducible: fails without project.build.outputTimestamp, or with a plugin
+           version known to write non-reproducible output. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-artifact-plugin</artifactId>
+        <version>3.6.0</version>
+        <executions>
+          <execution>
+            <id>check-reproducible</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>check-buildplan</goal>
+            </goals>
+            <configuration>
+              <failOnNonReproducible>true</failOnNonReproducible>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
@@ -88,7 +111,9 @@
 
       <plugin>
         <artifactId>maven-war-plugin</artifactId>
-        <version>3.4.0</version>
+        <!-- 3.5+: a reproducible build also normalises the mode of the files the plugin writes itself
+             (pom.properties took the build host's umask under 3.4.0). -->
+        <version>3.5.1</version>
         <configuration>
           <warSourceDirectory>TeaVM_Client/webapp</warSourceDirectory>
           <webResources>
