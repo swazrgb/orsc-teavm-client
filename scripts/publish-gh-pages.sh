@@ -16,8 +16,8 @@ site="$repo_root/target/client-base-teavm-1.0-SNAPSHOT"
 branch="gh-pages"
 remote="${1:-origin}"
 
-echo "==> Building the self-contained client (mvn clean package)..."
-mvn -q clean package
+echo "==> Building the self-contained client (gradlew clean assemble)..."
+./gradlew -q clean assemble
 [ -f "$site/index.html" ] || { echo "error: build did not produce $site/index.html" >&2; exit 1; }
 
 echo "==> Publishing to $remote/$branch..."

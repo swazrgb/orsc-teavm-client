@@ -1,3 +1,6 @@
 target/
+# Gradle: its project cache and the Kotlin compiler's session files.
+.gradle/
+.kotlin/
 *.iml
 .idea/

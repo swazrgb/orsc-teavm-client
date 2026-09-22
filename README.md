@@ -27,10 +27,11 @@ modified only to route those desktop-only code paths through the shims.
 
 ## Build
 
-Needs a JDK (17+) and Maven. TeaVM transpiles the client to JavaScript during `package`:
+Needs a JDK (17+); Gradle comes through the wrapper. TeaVM transpiles the client to JavaScript
+during `assemble`:
 
 ```bash
-mvn package
+./gradlew assemble
 ```
 
 Output lands in `target/`:
@@ -48,7 +49,7 @@ and the client is hostable anywhere. Because the assets are baked in, rebuild wh
 For an unminified, debuggable build:
 
 ```bash
-mvn package -Dteavm.minify=false -Dteavm.opt=SIMPLE
+./gradlew assemble -Dteavm.minify=false -Dteavm.opt=SIMPLE
 ```
 
 Source maps are on by default (they map the minified JS back to the Java sources and are fetched
