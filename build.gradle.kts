@@ -1,3 +1,6 @@
+import java.lang.reflect.Modifier
+import org.teavm.gradle.tasks.GenerateJavaScriptTask
+
 // The OpenRSC client, patched to run in a browser: the shared client (Client_Base/src) and the
 // browser launcher (TeaVM_Client/src), transpiled to JavaScript by TeaVM, beside the client cache
 // baked into static assets. The result is target/client-base-teavm-1.0-SNAPSHOT/, a directory any
@@ -63,10 +66,41 @@ val teavmOptimization = when (System.getProperty("teavm.opt") ?: "FULL") {
     else -> org.teavm.gradle.api.OptimizationLevel.AGGRESSIVE
 }
 
-// The TeaVM compile is restored from the build cache when nothing it reads has changed, as the Maven
-// build's module cache restored this whole project; the plugin declares its sources, classpath and
-// every option as inputs, but does not mark the task cacheable itself.
-tasks.matching { it.name == "generateJavaScript" }.configureEach { outputs.cacheIf { true } }
+// The TeaVM compile, restored from the build cache when nothing it reads has changed, as the Maven
+// build's module cache restored this whole project — on any checkout. The plugin's own task,
+// generateJavaScript, cannot be: it declares its sourceFiles (Client_Base/src and TeaVM_Client/src,
+// which the source map copies) by ABSOLUTE path, so every checkout, every CI workspace, had a
+// cache key of its own, and the compile ran on every build. compileJavaScript is that task with the
+// sources keyed on their RELATIVE paths and nothing else changed: it takes every value the plugin
+// configured on generateJavaScript, which is switched off. Cacheable by hand, as the plugin does not
+// mark its task cacheable either.
+abstract class RelocatableGenerateJavaScript : GenerateJavaScriptTask() {
+    @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
+    abstract override fun getSourceFiles(): ConfigurableFileCollection
+}
+
+val pluginJs = tasks.named<GenerateJavaScriptTask>("generateJavaScript") { enabled = false }
+val compileJavaScript = tasks.register<RelocatableGenerateJavaScript>("compileJavaScript") {
+    description = "TeaVM: the client to JavaScript (generateJavaScript, keyed on relative paths)."
+    group = pluginJs.get().group
+    val configured = pluginJs.get()
+    // Every option, classpath and source the task type declares, as the plugin set it.
+    GenerateJavaScriptTask::class.java.methods
+        .filter { it.parameterCount == 0 && it.name.startsWith("get") && Modifier.isAbstract(it.modifiers) }
+        .forEach { getter ->
+            val value = getter.invoke(configured)
+            @Suppress("UNCHECKED_CAST")
+            when (val own = getter.invoke(this)) {
+                is ConfigurableFileCollection -> own.from(value)
+                is Property<*> -> (own as Property<Any>).set(value as Property<Any>)
+                is ListProperty<*> -> (own as ListProperty<Any>).set(value as ListProperty<Any>)
+                is MapProperty<*, *> -> (own as MapProperty<Any, Any>).set(value as MapProperty<Any, Any>)
+                else -> error("${getter.name}: ${own?.javaClass} is not copied; say how")
+            }
+        }
+    outputs.cacheIf { true }
+}
 
 teavm {
     js {
@@ -112,7 +146,7 @@ tasks.war {
     // target/client-base-teavm-1.0-SNAPSHOT.war, where the README says it is.
     destinationDirectory = layout.buildDirectory
     from("TeaVM_Client/webapp")
-    from(tasks.named("generateJavaScript"))  { into("teavm") }
+    from(compileJavaScript) { into("teavm") }
     from(bakeCache)
 }
 
