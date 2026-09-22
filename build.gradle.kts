@@ -116,9 +116,17 @@ tasks.war {
     from(bakeCache)
 }
 
+// The war's zipTree through an injected ArchiveOperations, not the build script's own zipTree: that
+// one is the script object's method, which a lazily evaluated lambda would capture, and the
+// configuration cache cannot store a build script.
+interface ArchiveOps {
+    @get:Inject val archives: ArchiveOperations
+}
+
 val explodedWar = tasks.register<Sync>("explodedWar") {
     description = "The war's contents as a directory, for a static host to serve."
-    from(tasks.war.flatMap { it.archiveFile }.map { zipTree(it) }) {
+    val archives = objects.newInstance<ArchiveOps>().archives
+    from(tasks.war.flatMap { it.archiveFile }.map { archives.zipTree(it) }) {
         // The war's own manifest; Maven's exploded war had none, and the directory is served as is.
         exclude("META-INF/MANIFEST.MF")
     }
