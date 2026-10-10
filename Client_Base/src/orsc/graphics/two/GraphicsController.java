@@ -2937,12 +2937,10 @@ public class GraphicsController {
 	}
 
 	public boolean fillSpriteTree() {
-		File workspaceFile = new File(Config.F_CACHE_DIR, "video" + File.separator + "Custom_Sprites.osar");
-		if (!workspaceFile.exists())
-			return false;
-
 		Unpacker unpacker = new Unpacker();
-		Workspace workspace = unpacker.unpackArchive(workspaceFile);
+		Workspace workspace = unpacker.unpackArchive("video/Custom_Sprites.osar");
+		if (workspace == null)
+			return false;
 		for (Subspace subspace : workspace.getSubspaces()) {
 			Map<String, Entry> entries = new HashMap<>();
 			for (Entry entry : subspace.getEntryList())

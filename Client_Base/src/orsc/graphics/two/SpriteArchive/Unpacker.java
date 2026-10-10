@@ -4,6 +4,8 @@ import java.io.*;
 import java.nio.ByteBuffer;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
+import orsc.BrowserRuntime;
+import orsc.net.BrowserCache;
 
 public class Unpacker {
 
@@ -11,28 +13,20 @@ public class Unpacker {
 
 	}
 
-	public Workspace unpackArchive(File file) {
-		if (!file.exists())
-			return null;
-
+	/**
+	 * Browser build: {@code cachePath} is relative to the baked cache/ tree and fetched over HTTP — TeaVM
+	 * has no filesystem. The archive is one gzip stream, so the browser's native gunzip inflates it
+	 * ({@link BrowserCache#fetchInflate}). A missing archive returns null, as a missing file does on
+	 * desktop.
+	 */
+	public Workspace unpackArchive(String cachePath) {
 		try {
-			int index = file.getName().lastIndexOf('.');
-			String name = file.getName().substring(0, index );
+			String fileName = cachePath.substring(cachePath.lastIndexOf('/') + 1);
+			String name = fileName.substring(0, fileName.lastIndexOf('.'));
 			Workspace newWorkspace = new Workspace();
 			newWorkspace.changeName(name);
 
-			ByteArrayOutputStream out = new ByteArrayOutputStream();
-			try {
-				InputStream in = new GZIPInputStream(new FileInputStream(file));
-				byte[] buffer = new byte[65536];
-				int noRead;
-				while ((noRead = in.read(buffer)) != -1) {
-					out.write(buffer, 0, noRead);
-				}
-			} finally {
-				try { out.close(); } catch (Exception e) {}
-			}
-			ByteBuffer input = ByteBuffer.wrap(out.toByteArray());
+			ByteBuffer input = ByteBuffer.wrap(BrowserCache.fetchInflate(BrowserRuntime.cacheBase() + cachePath));
 
 			int subspaceCount = ((int) input.get()) & 0xFF;
 

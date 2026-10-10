@@ -4809,6 +4809,12 @@ public final class mudclient implements Runnable {
 		this.packetHandler.getClientStream().finishPacket();
 	}
 
+	/**
+	 * The status overlay replaces the stock side menu (same corner, same stats), so the side menu stays
+	 * off even on a server that offers it (S_SIDE_MENU_TOGGLE) to an account that turned it on.
+	 */
+	private static final boolean DRAW_STOCK_SIDE_MENU = false;
+
 	private void drawStatusOverlay() {
 		int y = 116;
 		int currentHits = this.playerStatCurrent[3];
@@ -5393,7 +5399,7 @@ public final class mudclient implements Runnable {
 					int i2 = 75;
 					int index;
 					int var12;
-					if (S_SIDE_MENU_TOGGLE && C_SIDE_MENU_OVERLAY) {
+					if (DRAW_STOCK_SIDE_MENU && S_SIDE_MENU_TOGGLE && C_SIDE_MENU_OVERLAY) {
 						int i = 130;
 						if (localPlayer.isDev()) {
 							this.getSurface().drawString("Tile: @gre@(@whi@" + (playerLocalX + midRegionBaseX)
@@ -14286,12 +14292,13 @@ public final class mudclient implements Runnable {
 			System.out.println(e);
 		}
 
-		//Load & apply sprite packs
-		File configFile = new File(clientPort.getCacheLocation(), "config.txt");
-		if (configFile.exists()) {
+		//Load & apply sprite packs. Browser build: config.txt and the packs are fetched from the baked
+		//cache/ tree; a missing config.txt fails the fetch, which skips the packs like a missing file.
+		{
 			ArrayList<String> activePacks = new ArrayList<>();
 			try {
-				BufferedReader br = new BufferedReader(new FileReader(configFile));
+				BufferedReader br = new BufferedReader(new InputStreamReader(
+					DataOperations.streamFromPath(clientPort.getCacheLocation() + "config.txt")));
 				String line;
 				while ((line = br.readLine()) != null) {
 					String[] packageName = line.split(":");
@@ -14299,12 +14306,12 @@ public final class mudclient implements Runnable {
 						activePacks.add(packageName[0]);
 				}
 				br.close();
-				File packFolder = new File(clientPort.getCacheLocation(), "video" + File.separator + "spritepacks");
 				Unpacker unpacker = new Unpacker();
 				Workspace workspace;
 				for (String filename : activePacks) {
-					File pack = new File(packFolder, filename + ".osar");
-					workspace = unpacker.unpackArchive(pack);
+					workspace = unpacker.unpackArchive("video/spritepacks/" + filename + ".osar");
+					if (workspace == null)
+						continue;
 					for (Subspace subspace : workspace.getSubspaces()) {
 						Map<String, orsc.graphics.two.SpriteArchive.Entry> entries = getSurface().spriteTree.get(subspace.getName());
 						for (orsc.graphics.two.SpriteArchive.Entry entry : subspace.getEntryList()) {
